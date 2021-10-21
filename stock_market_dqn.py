@@ -18,28 +18,7 @@ from collections import deque
 import pandas as pd
 import numpy as np
 
-#GSPC_Training_Dataset= pd.read_csv("/content/drive/MyDrive/RL Purdue Stock market DQn/GSPC_Training_Dataset.csv")
-#GSPC_Training_Dataset
-
-"""### CREATE A DQN AGENT
-
-* Action space include 3 actions: Buy, Sell, and Sit
-* Setting up the experience replay memory to deque with 1000 elements inside it
-* Empty list with inventory is created that contains the stocks that were already bought
-* Setting up gamma to 0.95, that helps to maximize the current reward over the long-term
-* Epsilon parameter determines whether to use a random action or to use the model for the action. 
-* In the beginning random actions are encouraged, hence epsilon is set up to 1.0 when the model is not trained.
-* And over time the epsilon is reduced to 0.01 in order to decrease the random actions and use the trained model
-* We're then set the speed of decreasing epsililon in the epsilon_decay parameter
-
-* Defining our neural network:
-* Define the neural network function called _model and it just takes the keyword self
-* Define the model with Sequential()
-* Define states i.e. the previous n days and stock prices of the days
-* Defining 3 hidden layers in this network
-* Changing the activation function to relu because mean-squared error is used for the loss
-
-"""
+# CREATE A DQN AGENT
 
 class Agent:
   def __init__(self, state_size, is_eval=False, model_name=""):
@@ -50,17 +29,17 @@ class Agent:
     # sit, buy, sell
     self.action_size = 3 
     
-    self.memory = deque(maxlen=1000)   # Max queue
+    self.memory = deque(maxlen=1000)   # Max queue for agent (replay memory)
     
     self.inventory  = []
     self.model_name = model_name
     self.is_eval    = is_eval
 
-    self.gamma   = 0.95
+    self.gamma   = 0.95 #hyperparameters
     
-    self.epsilon = 1.0
-    self.epsilon_min   = 0.01
-    self.epsilon_decay = 0.995
+    self.epsilon = 1.0   #hyperparameters
+    self.epsilon_min   = 0.01  #hyperparameters
+    self.epsilon_decay = 0.995  #hyperparameters
 
     self.model = load_model("" + model_name) if is_eval else self._model()
 
@@ -109,7 +88,7 @@ class Agent:
       if self.epsilon > self.epsilon_min:
           self.epsilon *= self.epsilon_decay
 
-"""### PREPROCESS THE DATA"""
+# PREPROCESS THE DATA
 
 import math
 import csv
@@ -122,7 +101,7 @@ def formatPrice(n):
 def getStockDataVec(key):
   
   vec = []
-  lines = open("/content/drive/MyDrive/RL Purdue Stock market DQn/" + key + ".csv", "r").read().splitlines()
+  lines = open("/dataset/" + key + ".csv", "r").read().splitlines()
   
   for line in lines[1:]:
     vec.append(float(line.split(",")[4]))
@@ -153,7 +132,7 @@ def getState(data, t, n):
     res.append(sigmoid(num))
   return np.array([res])
 
-"""### TRAIN AND BUILD THE MODEL"""
+# TRAIN AND BUILD THE MODEL
 
 import sys
 
@@ -209,9 +188,9 @@ for e in range(episode_count + 1):
 			agent.expReplay(batch_size)
 
 	#if e % 10 == 0:
-		agent.model.save("/content/drive/MyDrive/RL Purdue Stock market DQn/model_ep" + str(e))
-
-"""### **Evaluate the model and agent**"""
+		agent.model.save("/dataset/model_ep" + str(e))
+		
+# Evaluate the model and agent
 
 import sys
 from keras.models import load_model
@@ -224,12 +203,8 @@ if len(sys.argv) != 3:
 
 stock_name = 'GSPC_Evaluation_Dataset'
 model_name = 'model_ep0'
-#Note: 
-#Fill the given information when prompted: 
-#Enter stock_name = GSPC_Evaluation_Dataset
-#Model_name = respective model name
 
-model = load_model("/content/drive/MyDrive/RL Purdue Stock market DQn/" + model_name)
+model = load_model("/dataset/" + model_name)
 window_size = model.layers[0].input.shape.as_list()[1]
 
 agent = Agent(window_size, True, model_name)
